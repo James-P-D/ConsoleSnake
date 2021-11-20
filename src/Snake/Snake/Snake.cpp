@@ -51,13 +51,13 @@ using std::chrono::system_clock;
  * draw_cell()
  ***************************************************************/
 
-void draw_cell(int* cells, int x, int y) {
+void draw_cell(int* cells, int total_rows, int x, int y) {
     int col = x + 1;
     int row = y / 2;
     set_cursor_position(col, row);
 
-    int top_part = (y % 2 == 0) ? cells[x, y] : cells[x, y - 1];
-    int bot_part = (y % 2 == 0) ? cells[x, y - 1] : cells[x, y];
+    int top_part = (y % 2 == 0) ? cells[(x * total_rows) + y] : cells[(x * total_rows) + (y - 1)];
+    int bot_part = (y % 2 == 0) ? cells[(x * total_rows) + (y - 1)] : cells[(x * total_rows) + y];
 
     int top_color = (top_part == SNAKE) ? ANSI_RED : ((top_part == FOOD) ? ANSI_GREEN : ANSI_BLACK);
     int bot_color = (bot_part == SNAKE) ? ANSI_RED : ((bot_part == FOOD) ? ANSI_GREEN : ANSI_BLACK);
@@ -91,20 +91,22 @@ int main()
     int snake_length = 1;
     int snake_direction = LEFT;
 
+    printf("cols = %d, rows = %d\n", cols, rows);
+
     int* cells = new int[cols * rows];
     for (int x = 0; x < cols; x++)
         for (int y = 0; y < rows; y++)
-            cells[x, y] = EMPTY;
+            cells[(x * rows) + y] = EMPTY;
 
     draw_border(width, height);
 
     COORD food;
     do {
         food = { (short)(rand() % cols), (short)(rand() % rows) };
-    } while (cells[food.X, food.Y] == SNAKE);
-    cells[food.X, food.Y] = FOOD;
+    } while (cells[(food.X * rows) + food.Y] == SNAKE);
+    cells[(food.X * rows)+ food.Y] = FOOD;
 
-    draw_cell(cells, food.X, food.Y);
+    draw_cell(cells, rows, food.X, food.Y);
 
     auto last_time = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
 
@@ -139,8 +141,12 @@ int main()
             if ((snake_coords[next_snake_coord_index].X < 0) ||
                 (snake_coords[next_snake_coord_index].X >= cols) ||
                 (snake_coords[next_snake_coord_index].Y < 0) ||
-                (snake_coords[next_snake_coord_index].Y >= rows) ||
-                (cells[snake_coords[next_snake_coord_index].X, snake_coords[next_snake_coord_index].Y] == SNAKE)) {
+                (snake_coords[next_snake_coord_index].Y >= rows)) {
+
+                game_state = LOST;
+                cout << "LOST!";
+
+            }else if (cells[(snake_coords[next_snake_coord_index].X * rows) + snake_coords[next_snake_coord_index].Y] == SNAKE) {
 
                 game_state = LOST;
                 cout << "LOST!";
@@ -153,34 +159,34 @@ int main()
                     game_state = WON;
                 }
                 else {
-                    cells[snake_coords[next_snake_coord_index].X, snake_coords[next_snake_coord_index].Y] = SNAKE;
+                    cells[(snake_coords[next_snake_coord_index].X * rows) + snake_coords[next_snake_coord_index].Y] = SNAKE;
 
                     do {
                         food = { (short)(rand() % cols), (short)(rand() % rows) };
-                    } while (cells[food.X, food.Y] != SNAKE);
-                    cells[food.X, food.Y] = FOOD;
+                    } while (cells[(food.X * rows) + food.Y] != SNAKE);
+                    cells[(food.X * rows) + food.Y] = FOOD;
                     
-                    draw_cell(cells, food.X, food.Y);
-                    draw_cell(cells, snake_coords[next_snake_coord_index].X, snake_coords[next_snake_coord_index].Y);
+                    draw_cell(cells, rows, food.X, food.Y);
+                    draw_cell(cells, rows, snake_coords[next_snake_coord_index].X, snake_coords[next_snake_coord_index].Y);
 
                     snake_coord_index = next_snake_coord_index;
                 }
             }
             else {
-                cells[snake_coords[next_snake_coord_index].X, snake_coords[next_snake_coord_index].Y] = SNAKE;
+                cells[(snake_coords[next_snake_coord_index].X * rows) + snake_coords[next_snake_coord_index].Y] = SNAKE;
                 
                 // IS THIS NEXT LINE CORRECT?!?
                 int snake_end_coord_index = next_snake_coord_index - snake_length;
                 // ALSO DON't WE NEED TO WRAP?
 
 
-                cells[snake_coords[snake_end_coord_index].X, snake_coords[snake_end_coord_index].Y] = EMPTY;
+                cells[(snake_coords[snake_end_coord_index].X * rows) + snake_coords[snake_end_coord_index].Y] = EMPTY;
 
                 //printf("%d\n", cells[snake_coords[snake_end_coord_index].X, snake_coords[snake_end_coord_index].Y]);
                 //printf("%d\n", cells[snake_coords[next_snake_coord_index].X, snake_coords[next_snake_coord_index].Y]);
 
-                draw_cell(cells, snake_coords[snake_end_coord_index].X, snake_coords[snake_end_coord_index].Y);
-                draw_cell(cells, snake_coords[next_snake_coord_index].X, snake_coords[next_snake_coord_index].Y);
+                draw_cell(cells, rows, snake_coords[snake_end_coord_index].X, snake_coords[snake_end_coord_index].Y);
+                draw_cell(cells, rows, snake_coords[next_snake_coord_index].X, snake_coords[next_snake_coord_index].Y);
 
                 snake_coord_index = next_snake_coord_index;
             }
