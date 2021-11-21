@@ -14,10 +14,10 @@ using std::chrono::system_clock;
  * Game state constants
  ***************************************************************/
 
+const int INITIALISE = 0;
 const int PLAYING = 1;
 const int WON = 2;
 const int LOST = 3;
-const int CONTINUE = 4;
 const int QUIT = 5;
 
 /***************************************************************
@@ -78,107 +78,123 @@ int main() {
    
     SHORT cols = width - 2;
     SHORT rows = (height - 2) * 2;
-
     COORD* snake_coords = new COORD[cols * rows];
     int snake_coord_index = 0;
-    snake_coords[snake_coord_index] = { (SHORT)(cols / 2), (SHORT)(rows / 2) };
-    int snake_length = 1;
+    int snake_length = 0;
     int snake_direction = LEFT;
-        
     int* cells = new int[cols * rows];
-    for (int x = 0; x < cols; x++) {
-        for (int y = 0; y < rows; y++) {
-            cells[(x * rows) + y] = EMPTY;
-        }
-    }
+    COORD food = { 0,0 };
+    int game_state = INITIALISE;
 
-    draw_border(width, height);
-
-    COORD food;
-    do {
-        food = { (SHORT)(rand() % cols), (SHORT)(rand() % rows) };
-    } while (cells[(food.X * rows) + food.Y] == SNAKE);
-    cells[(food.X * rows)+ food.Y] = FOOD;
-
-    draw_cell(cells, rows, food.X, food.Y);
 
     auto last_time = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
-
-    int game_state = PLAYING;
+    
     while (game_state != QUIT) {
-        if (game_state == LOST) continue;
+        if ((game_state == LOST) || (game_state == WON)) {
+            if (GetAsyncKeyState('n') || GetAsyncKeyState('N')) {
+                game_state = QUIT;
+            }
+            else if (GetAsyncKeyState('y') || GetAsyncKeyState('Y')) {
+                game_state = INITIALISE;
+            }
+        }
+        else if (game_state == INITIALISE) {
+            snake_coord_index = 0;
+            snake_coords[snake_coord_index] = { (SHORT)(cols / 2), (SHORT)(rows / 2) };
+            snake_length = 1;
+            snake_direction = LEFT;
 
-        if (GetAsyncKeyState(VK_ESCAPE)) game_state = QUIT;
-        else if (GetAsyncKeyState(VK_UP)) snake_direction = UP;
-        else if (GetAsyncKeyState(VK_DOWN)) snake_direction = DOWN;
-        else if (GetAsyncKeyState(VK_LEFT)) snake_direction = LEFT;
-        else if (GetAsyncKeyState(VK_RIGHT)) snake_direction = RIGHT;
-                
-        auto current_time = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
-
-        if (current_time > (last_time + INTERVAL_MS)) {
-            last_time = current_time;
-
-            COORD current_head = snake_coords[snake_coord_index];
-            int next_snake_coord_index = snake_coord_index + 1;
-            if (next_snake_coord_index > ((cols * rows) - 1)) next_snake_coord_index = 0;
-
-            snake_coords[next_snake_coord_index].X = snake_coords[snake_coord_index].X;
-            snake_coords[next_snake_coord_index].Y = snake_coords[snake_coord_index].Y;
-
-            if (snake_direction == LEFT) snake_coords[next_snake_coord_index].X--;
-            else if (snake_direction == RIGHT) snake_coords[next_snake_coord_index].X++;
-            else if (snake_direction == UP) snake_coords[next_snake_coord_index].Y--;
-            else if (snake_direction == DOWN) snake_coords[next_snake_coord_index].Y++;
-            
-            if ((snake_coords[next_snake_coord_index].X < 0) ||
-                (snake_coords[next_snake_coord_index].X > cols) ||
-                (snake_coords[next_snake_coord_index].Y < 0) ||
-                (snake_coords[next_snake_coord_index].Y >= rows)) {
-
-                game_state = LOST;
-                draw_bottom_border_with_score_and_message(width, height, (snake_length-1), "You lost by hitting a wall!");
-            } else if (cells[(snake_coords[next_snake_coord_index].X * rows) + snake_coords[next_snake_coord_index].Y] == SNAKE) {
-
-                game_state = LOST;
-                draw_bottom_border_with_score_and_message(width, height, (snake_length - 1), "You lost by hitting your tail!");                
-            } else if ((snake_coords[next_snake_coord_index].X == food.X) && 
-                     (snake_coords[next_snake_coord_index].Y == food.Y)) {
-
-                snake_length++;
-
-                draw_bottom_border_with_score(width, height, snake_length - 1);
-
-                if (snake_length == (rows * cols)) {
-                    game_state = WON;
-                }
-                else {
-                    cells[(snake_coords[next_snake_coord_index].X * rows) + snake_coords[next_snake_coord_index].Y] = SNAKE;
-
-                    do {
-                        food = { (short)(rand() % cols), (short)(rand() % rows) };
-                    } while (cells[(food.X * rows) + food.Y] == SNAKE);
-                    cells[(food.X * rows) + food.Y] = FOOD;
-                    
-                    draw_cell(cells, rows, food.X, food.Y);
-                    draw_cell(cells, rows, snake_coords[next_snake_coord_index].X, snake_coords[next_snake_coord_index].Y);
-
-                    snake_coord_index = next_snake_coord_index;
-
+            for (int x = 0; x < cols; x++) {
+                for (int y = 0; y < rows; y++) {
+                    cells[(x * rows) + y] = EMPTY;
                 }
             }
-            else {
-                // IS THIS NEXT LINE CORRECT?!? -  ALSO DON't WE NEED TO WRAP?
-                int snake_end_coord_index = next_snake_coord_index - snake_length;
 
-                cells[(snake_coords[next_snake_coord_index].X * rows) + snake_coords[next_snake_coord_index].Y] = SNAKE;
-                cells[(snake_coords[snake_end_coord_index].X * rows) + snake_coords[snake_end_coord_index].Y] = EMPTY;
+            draw_border(width, height);
+            draw_bottom_border_with_score(width, height, snake_length - 1);
 
+            do {
+                food = { (SHORT)(rand() % cols), (SHORT)(rand() % rows) };
+            } while (cells[(food.X * rows) + food.Y] == SNAKE);
+            cells[(food.X * rows) + food.Y] = FOOD;
 
-                draw_cell(cells, rows, snake_coords[next_snake_coord_index].X, snake_coords[next_snake_coord_index].Y);
-                draw_cell(cells, rows, snake_coords[snake_end_coord_index].X, snake_coords[snake_end_coord_index].Y);
+            draw_cell(cells, rows, food.X, food.Y);
+            game_state = PLAYING;
+        }
+        else if (game_state == PLAYING) {
+            if (GetAsyncKeyState(VK_ESCAPE)) game_state = QUIT;
+            else if (GetAsyncKeyState(VK_UP)) snake_direction = UP;
+            else if (GetAsyncKeyState(VK_DOWN)) snake_direction = DOWN;
+            else if (GetAsyncKeyState(VK_LEFT)) snake_direction = LEFT;
+            else if (GetAsyncKeyState(VK_RIGHT)) snake_direction = RIGHT;
 
-                snake_coord_index = next_snake_coord_index;
+            auto current_time = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
+
+            if (current_time > (last_time + INTERVAL_MS)) {
+                last_time = current_time;
+
+                COORD current_head = snake_coords[snake_coord_index];
+                int next_snake_coord_index = snake_coord_index + 1;
+                if (next_snake_coord_index > ((cols * rows) - 1)) next_snake_coord_index = 0;
+
+                snake_coords[next_snake_coord_index].X = snake_coords[snake_coord_index].X;
+                snake_coords[next_snake_coord_index].Y = snake_coords[snake_coord_index].Y;
+
+                if (snake_direction == LEFT) snake_coords[next_snake_coord_index].X--;
+                else if (snake_direction == RIGHT) snake_coords[next_snake_coord_index].X++;
+                else if (snake_direction == UP) snake_coords[next_snake_coord_index].Y--;
+                else if (snake_direction == DOWN) snake_coords[next_snake_coord_index].Y++;
+
+                if ((snake_coords[next_snake_coord_index].X < 0) ||
+                    (snake_coords[next_snake_coord_index].X > cols) ||
+                    (snake_coords[next_snake_coord_index].Y < 0) ||
+                    (snake_coords[next_snake_coord_index].Y >= rows)) {
+
+                    game_state = LOST;
+                    draw_bottom_border_with_score_and_message(width, height, (snake_length - 1), "You lost by hitting a wall! Play again? [Y/N]");
+                }
+                else if (cells[(snake_coords[next_snake_coord_index].X * rows) + snake_coords[next_snake_coord_index].Y] == SNAKE) {
+
+                    game_state = LOST;
+                    draw_bottom_border_with_score_and_message(width, height, (snake_length - 1), "You lost by hitting your tail! Play again? [Y/N]");
+                }
+                else if ((snake_coords[next_snake_coord_index].X == food.X) &&
+                    (snake_coords[next_snake_coord_index].Y == food.Y)) {
+
+                    snake_length++;
+
+                    draw_bottom_border_with_score(width, height, snake_length - 1);
+
+                    if (snake_length == (rows * cols)) {
+                        game_state = WON;
+                        draw_bottom_border_with_score_and_message(width, height, (snake_length - 1), "You won! Play again? [Y/N]");
+                    }
+                    else {
+                        cells[(snake_coords[next_snake_coord_index].X * rows) + snake_coords[next_snake_coord_index].Y] = SNAKE;
+
+                        do {
+                            food = { (short)(rand() % cols), (short)(rand() % rows) };
+                        } while (cells[(food.X * rows) + food.Y] == SNAKE);
+                        cells[(food.X * rows) + food.Y] = FOOD;
+
+                        draw_cell(cells, rows, food.X, food.Y);
+                        draw_cell(cells, rows, snake_coords[next_snake_coord_index].X, snake_coords[next_snake_coord_index].Y);
+
+                        snake_coord_index = next_snake_coord_index;
+                    }
+                }
+                else {
+                    // IS THIS NEXT LINE CORRECT?!? -  ALSO DON't WE NEED TO WRAP?
+                    int snake_end_coord_index = next_snake_coord_index - snake_length;
+
+                    cells[(snake_coords[next_snake_coord_index].X * rows) + snake_coords[next_snake_coord_index].Y] = SNAKE;
+                    cells[(snake_coords[snake_end_coord_index].X * rows) + snake_coords[snake_end_coord_index].Y] = EMPTY;
+
+                    draw_cell(cells, rows, snake_coords[next_snake_coord_index].X, snake_coords[next_snake_coord_index].Y);
+                    draw_cell(cells, rows, snake_coords[snake_end_coord_index].X, snake_coords[snake_end_coord_index].Y);
+
+                    snake_coord_index = next_snake_coord_index;
+                }
             }
         }
     }
