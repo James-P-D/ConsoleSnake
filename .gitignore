@@ -30,3 +30,8 @@
 *.exe
 *.out
 *.app
+/src/Snake/.vs/Snake/v16
+/src/Snake/Debug
+Debug
+/src/Snake/Snake/*.filters
+/src/Snake/Snake/*.user

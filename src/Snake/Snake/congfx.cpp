@@ -1,12 +1,12 @@
 #include <windows.h>
 #include <iostream>
 
-#define TOP_LEFT_CORNER 218
-#define TOP_RIGHT_CORNER 191
-#define BOTTOM_LEFT_CORNER 192
-#define BOTTOM_RIGHT_CORNER 217
-#define HORIZONTAL_LINE 196
-#define VERTICAL_LINE 179
+#define TOP_LEFT_CORNER     219//  218
+#define TOP_RIGHT_CORNER    219//  191
+#define BOTTOM_LEFT_CORNER  219//  192
+#define BOTTOM_RIGHT_CORNER 219//  217
+#define HORIZONTAL_LINE     219//  196
+#define VERTICAL_LINE       219//  179
 
 /***************************************************************
  * set_cursor_position()
