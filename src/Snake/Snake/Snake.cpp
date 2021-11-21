@@ -70,25 +70,34 @@ void draw_cell(int* cells, int total_rows, int x, int y) {
  ***************************************************************/
 
 int main() {
+    // Get the size of the terminal and hide the cursor
     int width, height;
     set_console_show_flag(false);
     get_console_size(width, height);
+    
+    // Initialise the random number generator
     srand((unsigned)time(NULL));
-    HANDLE h_in = GetStdHandle(STD_INPUT_HANDLE);
-   
+
+    // Initialise variables for snake coordinate array
     SHORT cols = width - 2;
     SHORT rows = (height - 2) * 2;
     COORD* snake_coords = new COORD[cols * rows];
+    // Initialise index of snake coordinates
     int snake_coord_index = 0;
     int snake_length = 0;
     int snake_direction = LEFT;
     int* cells = new int[cols * rows];
-    COORD food = { 0,0 };
-    int game_state = INITIALISE;
 
+    // Inititialise food
+    COORD food = { 0,0 };
+    // Set the game state
+    int game_state = INITIALISE;
+    // Get the current time so we can animate every INTERVAL-ms
     auto last_time = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
     
     while (game_state != QUIT) {
+        // If the game is over, through win or loss, ask if they want to play again, and
+        // either quit or reinitialise the board
         if ((game_state == LOST) || (game_state == WON)) {
             if (GetAsyncKeyState('n') || GetAsyncKeyState('N')) {
                 game_state = QUIT;
@@ -98,25 +107,30 @@ int main() {
             }
         }
         else if (game_state == INITIALISE) {
+            // If we are initialising for a new game, set the snake vars
             snake_coord_index = 0;
             snake_coords[snake_coord_index] = { (SHORT)(cols / 2), (SHORT)(rows / 2) };
             snake_length = 1;
             snake_direction = LEFT;
 
+            // Initialise the cells board to empty
             for (int x = 0; x < cols; x++) {
                 for (int y = 0; y < rows; y++) {
                     cells[(x * rows) + y] = EMPTY;
                 }
             }
 
+            // Draw the border and then border with zero score
             draw_border(width, height);
             draw_bottom_border_with_score(width, height, snake_length - 1);
 
+            // Find a spare place on the board to put the food
             do {
                 food = { (SHORT)(rand() % cols), (SHORT)(rand() % rows) };
             } while (cells[(food.X * rows) + food.Y] == SNAKE);
             cells[(food.X * rows) + food.Y] = FOOD;
 
+            // Draw the food cell, and start playing
             draw_cell(cells, rows, food.X, food.Y);
             game_state = PLAYING;
         }
@@ -130,20 +144,27 @@ int main() {
             auto current_time = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
 
             if (current_time > (last_time + INTERVAL_MS)) {
+                // Record the current time so we can wait INTERVAL_MS again for the next move
                 last_time = current_time;
 
+                // Get the current head
                 COORD current_head = snake_coords[snake_coord_index];
+                // Get the next COORD in the array for the new head of the snake
                 int next_snake_coord_index = snake_coord_index + 1;
+                // (remember to wrap!)
                 if (next_snake_coord_index > ((cols * rows) - 1)) next_snake_coord_index = 0;
 
+                // Copy the COORD for the new head
                 snake_coords[next_snake_coord_index].X = snake_coords[snake_coord_index].X;
                 snake_coords[next_snake_coord_index].Y = snake_coords[snake_coord_index].Y;
 
+                // ..and set the new head coordinate dependant on the direction we are moving
                 if (snake_direction == LEFT) snake_coords[next_snake_coord_index].X--;
                 else if (snake_direction == RIGHT) snake_coords[next_snake_coord_index].X++;
                 else if (snake_direction == UP) snake_coords[next_snake_coord_index].Y--;
                 else if (snake_direction == DOWN) snake_coords[next_snake_coord_index].Y++;
 
+                // Check to see if we've hit a wall
                 if ((snake_coords[next_snake_coord_index].X < 0) ||
                     (snake_coords[next_snake_coord_index].X >= cols) ||
                     (snake_coords[next_snake_coord_index].Y < 0) ||
@@ -152,54 +173,75 @@ int main() {
                     game_state = LOST;
                     draw_bottom_border_with_score_and_message(width, height, (snake_length - 1), "You lost by hitting a wall! Play again? [Y/N]");
                 }
+                // Check to see if we've hit our own tail
                 else if (cells[(snake_coords[next_snake_coord_index].X * rows) + snake_coords[next_snake_coord_index].Y] == SNAKE) {
 
                     game_state = LOST;
                     draw_bottom_border_with_score_and_message(width, height, (snake_length - 1), "You lost by hitting your tail! Play again? [Y/N]");
                 }
+                // Check to see if we've found food
                 else if ((snake_coords[next_snake_coord_index].X == food.X) &&
                     (snake_coords[next_snake_coord_index].Y == food.Y)) {
 
+                    // Increase the length of the snake
                     snake_length++;
 
+                    // Update score
                     draw_bottom_border_with_score(width, height, snake_length - 1);
 
+                    // Check to see if we've won
                     if (snake_length == (rows * cols)) {
                         game_state = WON;
                         draw_bottom_border_with_score_and_message(width, height, (snake_length - 1), "You won! Play again? [Y/N]");
                     }
                     else {
+                        // Only incremement head, *DON'T* remove the last tail segment. We want the tail to grow
+                        // by 1 item each time we eat
                         cells[(snake_coords[next_snake_coord_index].X * rows) + snake_coords[next_snake_coord_index].Y] = SNAKE;
 
+                        // Find another spare cell to put the food
                         do {
                             food = { (short)(rand() % cols), (short)(rand() % rows) };
                         } while (cells[(food.X * rows) + food.Y] == SNAKE);
                         cells[(food.X * rows) + food.Y] = FOOD;
 
+                        // Draw the food
                         draw_cell(cells, rows, food.X, food.Y);
+                        // Draw the new head
                         draw_cell(cells, rows, snake_coords[next_snake_coord_index].X, snake_coords[next_snake_coord_index].Y);
-
+                        // Update the index
                         snake_coord_index = next_snake_coord_index;
                     }
                 }
                 else {
+                    // Find the tail (very last item)
                     int snake_end_coord_index = next_snake_coord_index - snake_length;
+                    // (and remember to wrap!)
                     if (snake_end_coord_index < 0) snake_end_coord_index += (cols * rows);
 
+                    // Set the new head of the snake
                     cells[(snake_coords[next_snake_coord_index].X * rows) + snake_coords[next_snake_coord_index].Y] = SNAKE;
+                    // Remove the last item of the tail
                     cells[(snake_coords[snake_end_coord_index].X * rows) + snake_coords[snake_end_coord_index].Y] = EMPTY;
 
+                    // Draw the head
                     draw_cell(cells, rows, snake_coords[next_snake_coord_index].X, snake_coords[next_snake_coord_index].Y);
+                    // Draw the tail (remove)
                     draw_cell(cells, rows, snake_coords[snake_end_coord_index].X, snake_coords[snake_end_coord_index].Y);
 
+                    // Update the index
                     snake_coord_index = next_snake_coord_index;
                 }
             }
         }
     }
 
+    // Make the cursor visible again
     set_console_show_flag(true);
 
+    // Clean-up!
     delete[] snake_coords;
+
+    // Return to OS
     return 0;
 }
