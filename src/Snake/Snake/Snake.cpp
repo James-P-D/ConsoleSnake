@@ -41,7 +41,7 @@ const int FOOD = 2;
  * Misc. constants
  ***************************************************************/
 
-const int INTERVAL_MS = 100;
+const int INTERVAL_MS = 75;
 
 const int ANSI_BLACK = 30;
 const int ANSI_RED = 31;
