@@ -146,7 +146,7 @@ int main() {
                 else if (snake_direction == DOWN) snake_coords[next_snake_coord_index].Y++;
 
                 if ((snake_coords[next_snake_coord_index].X < 0) ||
-                    (snake_coords[next_snake_coord_index].X > cols) ||
+                    (snake_coords[next_snake_coord_index].X >= cols) ||
                     (snake_coords[next_snake_coord_index].Y < 0) ||
                     (snake_coords[next_snake_coord_index].Y >= rows)) {
 
