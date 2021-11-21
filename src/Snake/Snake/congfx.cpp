@@ -1,12 +1,7 @@
 #include <windows.h>
 #include <iostream>
 
-#define TOP_LEFT_CORNER     219//  218
-#define TOP_RIGHT_CORNER    219//  191
-#define BOTTOM_LEFT_CORNER  219//  192
-#define BOTTOM_RIGHT_CORNER 219//  217
-#define HORIZONTAL_LINE     219//  196
-#define VERTICAL_LINE       219//  179
+#define BLOCK 219
 
 /***************************************************************
  * set_cursor_position()
@@ -15,7 +10,7 @@
 void set_cursor_position(int x, int y) {
     COORD pos = { (short)x, (short)y };
     HANDLE output = GetStdHandle(STD_OUTPUT_HANDLE);
-    !SetConsoleCursorPosition(output, pos);
+    SetConsoleCursorPosition(output, pos);
 }
 
 /***************************************************************
@@ -50,9 +45,9 @@ void set_console_show_flag(bool show_flag) {
 void draw_top_border(int width) {
     set_cursor_position(0, 0);
     for (int x = 0; x < width; x++) {
-        if (x == 0) std::cout << char(TOP_LEFT_CORNER);
-        else if (x == (width - 1)) std::cout << char(TOP_RIGHT_CORNER);
-        else std::cout << char(HORIZONTAL_LINE);
+        if (x == 0) std::cout << char(BLOCK);
+        else if (x == (width - 1)) std::cout << char(BLOCK);
+        else std::cout << char(BLOCK);
     }
 }
 
@@ -63,9 +58,9 @@ void draw_top_border(int width) {
 void draw_bottom_border(int width, int height) {
     set_cursor_position(0, height-1);
     for (int x = 0; x < width; x++) {
-        if (x == 0) std::cout << char(BOTTOM_LEFT_CORNER);
-        else if (x == (width - 1)) std::cout << char(BOTTOM_RIGHT_CORNER);
-        else std::cout << char(HORIZONTAL_LINE);
+        if (x == 0) std::cout << char(BLOCK);
+        else if (x == (width - 1)) std::cout << char(BLOCK);
+        else std::cout << char(BLOCK);
     }
 }
 
@@ -98,11 +93,11 @@ void draw_bottom_border_with_score_and_message(int width, int height, int score,
 void draw_side_borders(int width, int height) {
     for (int y = 1; y < (height - 1); y++) {
         set_cursor_position(0, y);
-        std::cout << char(VERTICAL_LINE);
+        std::cout << char(BLOCK);
         for (int x = 0; x < width-2; x++) {
             std::cout << " ";
         }
-        std::cout << char(VERTICAL_LINE);
+        std::cout << char(BLOCK);
     }
 }
 

@@ -86,7 +86,6 @@ int main() {
     COORD food = { 0,0 };
     int game_state = INITIALISE;
 
-
     auto last_time = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
     
     while (game_state != QUIT) {
@@ -184,8 +183,8 @@ int main() {
                     }
                 }
                 else {
-                    // IS THIS NEXT LINE CORRECT?!? -  ALSO DON't WE NEED TO WRAP?
                     int snake_end_coord_index = next_snake_coord_index - snake_length;
+                    if (snake_end_coord_index < 0) snake_end_coord_index += (cols * rows);
 
                     cells[(snake_coords[next_snake_coord_index].X * rows) + snake_coords[next_snake_coord_index].Y] = SNAKE;
                     cells[(snake_coords[snake_end_coord_index].X * rows) + snake_coords[snake_end_coord_index].Y] = EMPTY;
