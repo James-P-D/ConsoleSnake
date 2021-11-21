@@ -70,6 +70,28 @@ void draw_bottom_border(int width, int height) {
 }
 
 /***************************************************************
+ * draw_bottom_border_with_score()
+ ***************************************************************/
+
+void draw_bottom_border_with_score(int width, int height, int score) {
+    draw_bottom_border(width, height);
+    set_cursor_position(1, height - 1);
+    std::cout << " Score: " << score << " ";
+}
+
+/***************************************************************
+ * draw_bottom_border_with_score_and_message()
+ ***************************************************************/
+
+void draw_bottom_border_with_score_and_message(int width, int height, int score, const char* message) {
+    draw_bottom_border(width, height);
+    set_cursor_position(1, height - 1);
+    std::cout << " Score: " << score << " ";
+    set_cursor_position(20, height - 1);
+    std::cout << " " << message << " ";
+}
+
+/***************************************************************
  * draw_side_borders()
  ***************************************************************/
 

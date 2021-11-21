@@ -63,19 +63,13 @@ void draw_cell(int* cells, int total_rows, int x, int y) {
     int bot_color = (bot_part == SNAKE) ? ANSI_RED : ((bot_part == FOOD) ? ANSI_GREEN : ANSI_BLACK);
 
     printf("\x1B[%d;%dm\xDF\033[0m", top_color, bot_color + 10);
-    //printf("\x1B[%d;%dm\xDC\033[0m", top_color, bot_color+10);
 }
-
 
  /***************************************************************
  * main()
  ***************************************************************/
 
-int main()
-{
-    
-    
-
+int main() {
     int width, height;
     set_console_show_flag(false);
     get_console_size(width, height);
@@ -90,13 +84,13 @@ int main()
     snake_coords[snake_coord_index] = { (SHORT)(cols / 2), (SHORT)(rows / 2) };
     int snake_length = 1;
     int snake_direction = LEFT;
-
-    printf("cols = %d, rows = %d\n", cols, rows);
-
+        
     int* cells = new int[cols * rows];
-    for (int x = 0; x < cols; x++)
-        for (int y = 0; y < rows; y++)
+    for (int x = 0; x < cols; x++) {
+        for (int y = 0; y < rows; y++) {
             cells[(x * rows) + y] = EMPTY;
+        }
+    }
 
     draw_border(width, height);
 
@@ -109,7 +103,6 @@ int main()
     draw_cell(cells, rows, food.X, food.Y);
 
     auto last_time = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
-
 
     int game_state = PLAYING;
     while (game_state != QUIT) {
@@ -144,17 +137,18 @@ int main()
                 (snake_coords[next_snake_coord_index].Y >= rows)) {
 
                 game_state = LOST;
-                
-
-            }else if (cells[(snake_coords[next_snake_coord_index].X * rows) + snake_coords[next_snake_coord_index].Y] == SNAKE) {
+                draw_bottom_border_with_score_and_message(width, height, (snake_length-1), "You lost by hitting a wall!");
+            } else if (cells[(snake_coords[next_snake_coord_index].X * rows) + snake_coords[next_snake_coord_index].Y] == SNAKE) {
 
                 game_state = LOST;
-                
-            }
-            else if ((snake_coords[next_snake_coord_index].X == food.X) && 
+                draw_bottom_border_with_score_and_message(width, height, (snake_length - 1), "You lost by hitting your tail!");                
+            } else if ((snake_coords[next_snake_coord_index].X == food.X) && 
                      (snake_coords[next_snake_coord_index].Y == food.Y)) {
 
                 snake_length++;
+
+                draw_bottom_border_with_score(width, height, snake_length - 1);
+
                 if (snake_length == (rows * cols)) {
                     game_state = WON;
                 }
@@ -170,6 +164,7 @@ int main()
                     draw_cell(cells, rows, snake_coords[next_snake_coord_index].X, snake_coords[next_snake_coord_index].Y);
 
                     snake_coord_index = next_snake_coord_index;
+
                 }
             }
             else {
